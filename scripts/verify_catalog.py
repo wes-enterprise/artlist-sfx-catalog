@@ -36,10 +36,10 @@ def main():
 
     print("2) slim structure")
     slim = json.loads(gzip.open(f"{ROOT}/data/catalog/sfx_slim.json.gz").read())
-    check("schema", slim["schema"] == "artlist-sfx-catalog/1.0", slim["schema"])
+    check("schema", slim["schema"] == "artlist-sfx-catalog/1.1", slim["schema"])
     songs = slim["songs"]
     n = len(songs)
-    check("corpus count = 50,977", n == 50977, f"{n}")
+    check("corpus count = 71,096", n == 71096, f"{n}")
     ids = [s["songId"] for s in songs]
     check("unique ids", len(set(ids)) == n, f"{len(set(ids))}")
 
@@ -70,7 +70,7 @@ def main():
 
     print("5) waves lane")
     w = json.loads(gzip.open(f"{ROOT}/data/catalog/sfx_waves.json.gz").read())
-    check("schema", w["schema"] == "artlist-sfx-catalog/waves/1.0", w["schema"])
+    check("schema", w["schema"] == "artlist-sfx-catalog/waves/1.1", w["schema"])
     ws = w["songs"]
     check("lane covers all songs", set(ws) == set(ids), f"{len(ws)} vs {n}")
     have_stats = sum(1 for v in ws.values() if not v.get("error"))
@@ -88,15 +88,16 @@ def main():
     check("cont in [0,1]", bad_cont == 0, f"{bad_cont} out of range")
     # class rule consistency on a sample
     random.seed(7)
-    samp = random.sample([v for v in ws.values() if not v.get("error")], 500)
+    samp = random.sample([v for v in ws.values() if "class" in v], 500)
     bad = 0
     for v in samp:
-        ssr = v.get("ssr"); oden = v.get("oden"); dur = v.get("dur") or 0; cont = v.get("cont") or 0
+        ssr = v.get("ssr"); sr = v.get("sr"); oden = v.get("oden")
+        dur = v.get("dur") or 0; cont = v.get("cont") or 0
         if cont >= 0.55 and (ssr is None or ssr < 0.25):
             exp = "ambience"
         elif oden is not None and 0.5 <= oden <= 12 and (ssr is None or ssr < 0.3):
             exp = "rhythmic"
-        elif (ssr if ssr is not None else 1) > 0.5 or (cont < 0.30 and dur <= 15):
+        elif (ssr if ssr is not None else (sr if sr is not None else 1)) > 0.5 or (cont < 0.30 and dur <= 15):
             exp = "oneshot"
         else:
             exp = "event"

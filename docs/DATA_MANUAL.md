@@ -6,7 +6,7 @@ evidence behind the metadata audit (2026-11-26).
 ## File: `data/catalog/sfx_slim.json.gz`
 
 Top level: `schema` (`artlist-sfx-catalog/1.0`), `description`,
-`generated_at`, `source`, `songs[]` — **all 50,977 sounds** (the FULL SFX
+`generated_at`, `source`, `songs[]` — **all 71,096 sounds** (the FULL SFX
 corpus at capture; no sampling).
 
 Per-song fields:
@@ -150,7 +150,7 @@ have been added since 2026-11-21.
 - Corpus: sfxList GraphQL walk 2026-11-21 (lineage `wesisad5/artlist-scraper`
   → `data/sfx/chunks`, 11 × 5,000-row chunks, build manifest `build.json`
   with content hashes).
-- Waveform harvest: 2026-11-26, all 50,977 `waveSurferFilePath` JSONs
+- Waveform harvest: 2026-11-26, all 71,096 `waveSurferFilePath` JSONs
   fetched with Origin/Referer spoof, 24 threads, ~4 min; 20 failures
   retried 3× each then marked `error`.
 - Continuity classification: 2026-11-26 (`scripts/classify_continuity.py`

@@ -1,7 +1,7 @@
 # artlist-sfx-catalog
 
 Static, versioned data catalog of the **Artlist.io SFX library — the full
-50,977-sound corpus** (capture 2026-11-21), packaged for programmatic
+71,096-sound corpus** (capture 2026-11-21), packaged for programmatic
 consumption by AI agents. Companion to
 [wes-enterprise/artlist-bgm-catalog](https://github.com/wes-enterprise/artlist-bgm-catalog)
 (music).

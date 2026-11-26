@@ -7,8 +7,9 @@
 ## What this is
 
 A static, versioned snapshot of the **Artlist.io SFX catalog — the FULL corpus,
-50,977 sounds** (capture 2026-11-21), packaged for programmatic consumption by
-AI agents. Companion repo to `wes-enterprise/artlist-bgm-catalog` (music).
+71,096 sounds** (v1.1 full-field walk 2026-11-26), packaged for programmatic
+consumption by AI agents. Companion repo to `wes-enterprise/artlist-bgm-catalog`
+(music).
 
 Two files:
 
@@ -25,10 +26,10 @@ Every sound has a waveform-derived class + `cont` score (0..1):
 
 | class | meaning | count | typical |
 | --- | --- | --- | --- |
-| `ambience` | continuous bed — no silence gaps, few onsets | 18,986 (37%) | rain, city room tone, server hum, wind |
-| `rhythmic` | patterned and continuous but event-y — periodic onsets | 2,819 (6%) | drum loops, ticking clocks, drips |
-| `event` | mid-ground: active but gappy, longer form | 3,289 (6%) | foley sequences, distant thunder, speech |
-| `oneshot` | transient event surrounded by silence | 25,863 (51%) | gunshots, clicks, door slams, barks |
+| `ambience` | continuous bed — no silence gaps, few onsets | 25,347 (36%) | rain, city room tone, server hum, wind |
+| `rhythmic` | patterned and continuous but event-y — periodic onsets | 3,959 (6%) | drum loops, ticking clocks, drips |
+| `event` | mid-ground: active but gappy, longer form | 4,652 (7%) | foley sequences, distant thunder, speech |
+| `oneshot` | transient event surrounded by silence | 37,112 (52%) | gunshots, clicks, door slams, barks |
 
 ```python
 import gzip, json
@@ -43,8 +44,9 @@ beds = [(w['cont'], sid) for sid, w in waves.items()
 rhythmic_loops = [sid for sid, w in waves.items() if w['class'] == 'rhythmic']
 ```
 
-**Calibration (honest):** classes were validated on 6,105 name-labeled
-exemplars — 95% agreement for ambience-named sounds, 83% for oneshot-named;
+**Calibration (honest):** classes were validated on name-labeled exemplars —
+95% agreement for ambience-named sounds (4,920/5,158), 85% for oneshot-named
+(1,394/1,634);
 category-family cross-check: City 94% / Indoor Ambiences 93% / Weather 93%
 classified ambience, vs Logos 28%. The remaining disagreement is mostly
 **semantics, not error**: a gong's 15-second decay *is* waveform-continuous
@@ -60,7 +62,8 @@ the Sfx GraphQL type (`loopable`, `loop`, `ambience`, `isAmbient`, `seamless`,
 `continuity`, `variations`, `soundType`, `sampleRate`, … all absent; full list
 in DATA_MANUAL). What the API does give every sound is a
 `waveSurferFilePath` — a 2048-bucket peak-envelope JSON. We fetched all
-50,977 (10 minutes, Origin-spoofed) and computed:
+71,070 with waveforms (5 minutes, Origin-spoofed; 26 sounds have no waveform
+URL in the API itself) and computed:
 
 - raw stats: silence ratio, quiet ratio, crest factor (peak/rms), envelope
   crossings, longest active run, onset density (crossings/second)
@@ -166,16 +169,25 @@ continuity-lane coverage, live CDN probes) — run it after cloning.
   TOP_DOWNLOADS but never exposes the counts.
 - **Similar sounds** — `similarSongs` field exists but returned `null` on
   every probe; the similar-sounds UI on artlist.io is computed elsewhere.
-- **Coverage vs live site** — capture 2026-11-21; the live catalog adds
-  sounds continuously (live per-category counts can exceed ours).
-- **31-ish known gaps**: 20 sounds failed waveform fetch (0.04%, listed by
-  the verifier); category membership can drift (a sound we hold under
-  "Blades" may today also carry "Metal").
+- **Coverage vs live site** — v1.1 full-field walk 2026-11-26 (all 155
+  category ids x NEWEST + TOP_DOWNLOADS; the API rate-limits sustained walks,
+  82 of 310 windows were unreachable that day). We hold 71,096 sounds vs the
+  68,540-id same-day census floor (+2,556 beyond it); ~166 census ids (0.24%)
+  remain uncaptured, and the live catalog keeps growing.
+- **26 sounds have no waveform URL** in the API itself (`missing_wave` in the
+  waves lane) — not a fetch failure.
+- **137 records carry 16 fields** (v1.0 capture shape: no
+  isOriginal/originalVersionID/albumThumbFilePath/lyrics/duration): they sit
+  outside both sort windows and were not reachable by term/category search;
+  100 of the original 237 such records were upgraded to full 20-field
+  records in v1.1.
+- **2 sounds (138784, 139403) have NULL categories** — live-verified the
+  API returns no grandChildCategories for them; upstream data gap.
 
 ## Repo layout
 
 ```
-data/catalog/sfx_slim.json.gz    # FULL corpus: 50,977 sounds, all API fields
+data/catalog/sfx_slim.json.gz    # FULL corpus: 71,096 sounds, all API fields
 data/catalog/sfx_waves.json.gz   # wave stats + continuity class per songId
 docs/DATA_MANUAL.md              # full field reference + probe evidence
 scripts/verify_catalog.py        # integrity checker
@@ -184,15 +196,21 @@ AGENTS.md                        # this file
 
 ## Changelog
 
-- **v1.0 (2026-11-26)** — initial release: full 50,977-sound corpus; waveform
-  stats + continuity lane (ambience/rhythmic/event/oneshot with cont score)
-  computed from all 50,977 waveform JSONs; metadata audit vs the live Sfx
-  GraphQL type (no missed fields — the 6 we don't carry are constant/null
-  for SFX); 154-name (155 id-triple) taxonomy with ids.
+- **v1.1 (2026-11-26)** — full-field re-walk: +20,119 sounds vs v1.0
+  (71,096 total = 70,859 dual-sort walk + 237 v1.0 records kept), all 20
+  API fields (v1.0 chunks carried 16 — the E2E audit caught this); wave
+  stats + continuity extended to all 71,070 sounds with waveforms;
+  end-to-end audit 19/19 PASS (capture completeness, field fidelity,
+  pipeline recompute, output integrity, live CDN probes).
+- **v1.0 (2026-11-26)** — initial release: 50,977-sound single-sort walk;
+  waveform stats + continuity lane (ambience/rhythmic/event/oneshot with
+  cont score); metadata audit vs the live Sfx GraphQL type; 154-name
+  (155 id-triple) taxonomy with ids.
 
 ## Updates
 
-Capture lineage: `wesisad5/artlist-scraper` sfxList walk 2026-11-21;
-waveform harvest + continuity classification 2026-11-26. To refresh the
-corpus, re-run the sfxList walk (per-category NEWEST pagination, 12/page);
-to refresh wave stats, re-run the harvest (resumable, ~10 min for 51k).
+Capture lineage: sfxList GraphQL walks 2026-11-21 (single-sort, 16-field)
+and 2026-11-26 (dual-sort full-field); waveform harvest + continuity
+classification 2026-11-26. To refresh, re-run the dual-sort walk
+(`scripts/walk_sfx_full.py`, resumable, rate-limit aware); to refresh wave
+stats, re-run the harvest (resumable, ~5 min for 71k warm).
